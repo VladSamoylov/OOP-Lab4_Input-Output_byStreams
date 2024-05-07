@@ -3,6 +3,8 @@
 #include "cstring"
 #include "iomanip"
 #include "fstream"
+#include <chrono>
+#include <thread>
 
 #define ANSI_COLOR_BLUE "\033[34m"
 #define ANSI_COLOR_RESET "\033[0m"
@@ -425,7 +427,7 @@ pair<int, int> VectorBit::Size() {
 */
 VectorBit::~VectorBit() {
 
-	cout << "\nThe VectorBit #" << countVector << " was destroyed" << endl;
+	//cout << "\nThe VectorBit #" << countVector << " was destroyed" << endl;
 	delete[] mas;
 	countVector--;
 }
@@ -499,7 +501,7 @@ void VectorBit::WriteBinaryFile(const int& n) {
 }
 
 /**
- * @brief Метод, який знаходить розмір досліджуваного файлу
+ * @brief Метод, який знаходить розмір досліджувального файлу
  * @param filename Ім'я файлу
  * @return Кількість векторів для зчитування
 */
@@ -679,7 +681,7 @@ void CheckData(int& x) {
 
 int main() {
 	srand(time(0));
-	int n = 0;
+	int n = 0, test_count = 0, amount_vectors = 0;
 	int n_file = 0, n_filebin = 0;
 	int work = 1;	
 	VectorBit* vector = nullptr;	
@@ -688,7 +690,7 @@ int main() {
 		switch (work) {
 		case 1:	
 			if (vector != nullptr) delete[] vector;
-			cout << "\nEnter amount of VectorBit: ";
+			cout << "Enter amount of VectorBit: ";
 			do {
 				cin >> insetup >> n;
 				CheckData(n);
@@ -730,6 +732,42 @@ int main() {
 		case 5:
 			if (vector != nullptr) for (int i = 0; i < n; i++) { vector[i].Show(); }
 			break;
+		case 8:
+			cout << "Amount of times of write/read cycles: "; cin >> test_count; CheckData(test_count); amount_vectors = 0;
+			if (vector != nullptr) { cout << "File cleared\n"; vector->ClearFile("data.txt"); vector->ClearFile("data.bin"); }
+			for (int i = 0; i < test_count; i++) {
+				if (vector != nullptr) delete[] vector;
+				if ((i + 1) % 2 == 0) n = 10; else n = (rand() % 500) + 1;
+				amount_vectors += n;
+				vector = new VectorBit[n];
+				for (int k = 0; k < n; k++) { vector[k].SetVector(); }
+				cout << "\nThe Test #" << i + 1 << endl;
+				cout << "The VectorBit with size of " << n << " is writing to file .txt..." << endl; vector->WriteFile(n);
+				cout << "The VectorBit with size of " << n << " is writing to file .bin..." << endl; vector->WriteBinaryFile(n);
+				cout << "Reading from file .txt..." << endl;
+				this_thread::sleep_for(chrono::seconds(4));
+				n_file = vector->SizeFile("data.txt");
+				if (n_file == 0) cout << "File is empty!" << endl;
+				else {
+					if (vector != nullptr && n != n_file) { delete[] vector; n = n_file; vector = new VectorBit[n]; }
+					vector->ReadFile(n);
+				}
+				cout << "Reading from file .bin..." << endl; vector->ReadBinaryFile(n);
+				n_file = vector->SizeFile("data.bin");
+				if (n_file == 0) cout << "File is empty!" << endl;
+				else {
+					if (vector != nullptr && n != n_file) { delete[] vector; n = n_file; vector = new VectorBit[n]; }
+					vector->ReadBinaryFile(n);
+					for (int i = 0; i < n; i++) { vector[i].Show(); }
+				}
+			}
+			cout << "\nResult:\n";
+			cout << "Amount of vectors: " << amount_vectors << endl;
+			n_file = vector->SizeFile("data.txt");
+			cout << "Amount of vectors in data.txt: " << n_file << endl;
+			n_file = vector->SizeFile("data.bin");
+			cout << "Amount of vectors in data.bin: " << n_file << endl;
+			break;
 		default:
 			work = 0;
 			break;
@@ -740,6 +778,7 @@ int main() {
 		cout << "Enter 3 - Reading from file" << endl;
 		cout << "Enter 4 - Clear file" << endl;
 		cout << "Enter 5 - Show current vectors" << endl;
+		cout << "Enter 8 - Stress Test" << endl;
 		cout << "Enter 0 - Exit" << endl;
 		cin >> insetup >> work;
 		CheckData(work);
